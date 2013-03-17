@@ -25,6 +25,6 @@ To see the kittens you've saved, run:
 
 > coffee find_the_kittens.coffee
 
-If all goes well, you'll see the cat you
+If all goes well, you'll see the cats you
 saved the last time around in the listing of all cats saved.
 
