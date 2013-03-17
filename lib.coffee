@@ -29,7 +29,6 @@ get_files = (path, ext=null) ->
 	return files
 
 
-
 exports.register_models = ->
 
 	path = "./models"
