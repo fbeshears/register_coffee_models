@@ -19,6 +19,7 @@ exports.register_model = (mongoose) ->
 	mongoose.model 'Kitten', Kitten
 
 	return null
+	
 	# If, for example, we assume the model's name is Kitten,
 	# then we would have used the following to compile and register it:
 	# mongoose.model('Kitten', Kitten);
