@@ -91,3 +91,11 @@ exports.find_the_cats = ->
 
 
 	return null
+
+
+exports.delete_the_cats = ->
+	Kitten = mongoose.model('Kitten')
+
+	Kitten.remove (err) ->
+		throw err if err
+		console.log "no more kittens"
