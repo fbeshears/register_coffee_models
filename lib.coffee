@@ -1,101 +1,121 @@
 # lib.coffee
 
 mongoose = require 'mongoose'
+async = require 'async'
 fs = require 'fs'
 
 
-exports.start_the_server = ->
+start_the_server = (callback) ->
 
-	mongoose.connect 'mongodb://localhost/test', (err) ->
-		if err
-			throw err
-		else
-			console.log 'connected to MongoDB'
-		return null
+  mongoose.connect 'mongodb://localhost/test', (err) ->
+    if err
+      callback(err, null)
+    else
+      register_models()
+      callback(null, 'connected to MongoDB')
+    return null
 
-	return null
+  return null
 
 
 get_files = (path, ext=null) ->
-	if !fs.existsSync(path)
-		return []  
+  if !fs.existsSync(path)
+    return []  
 
-	if ext == null
-		files = (f for f in fs.readdirSync(path))
-	else
-		pattern = new RegExp(ext + "$")
-		files = (f for f in fs.readdirSync(path) when pattern.test(f))
+  if ext == null
+    files = (f for f in fs.readdirSync(path))
+  else
+    pattern = new RegExp(ext + "$")
+    files = (f for f in fs.readdirSync(path) when pattern.test(f))
 
-	return files
-
-
-exports.register_models = ->
-
-	path = "./models"
-
-	files = get_files(path, ".coffee")
-
-	for fn in files
-
-		path_fn = path + "/" + fn
-		console.log(path_fn)
-
-		model = require(path_fn)
-		model.register_model(mongoose)
-
-	return null
+  return files
 
 
-exports.save_the_cats = ->
+register_models = ->
 
-	cat_names = "fluffy,morris,felix,sylvester,puss_n_boots,sabu".split(",")
+  path = "./models"
 
-	Kitten = mongoose.model('Kitten')
+  files = get_files(path, ".coffee")
 
-	for cat_name in cat_names
+  for fn in files
 
-		cat = new Kitten {
-			name: cat_name
-		}
+    path_fn = path + "/" + fn
+    #console.log(path_fn)
 
-		# note that since this has a callback, the
-		# save happens asychronously. So, the find
-		# that follows may not (probably will not)
-		# retrieve the cat you're trying to save.
+    model = require(path_fn)
+    model.register_model(mongoose)
 
-		cat.save (err, cat) ->
-			if err 
-				console.log("could not save #{cat.name}")
-			else
-				console.log "saved #{cat.name}"
-			return null
-
-	return null
-
-exports.find_the_cats = ->
-	
-	Kitten = mongoose.model('Kitten')
+  return null
 
 
-	Kitten.find (err, kittens) ->
-		if err
-			console.error "could not find any kittens"
-		else if kittens.length <= 0
-			console.log "I have no kittens"
-		else
-			for k in kittens
-				cat = new Kitten(k)
-				cat.speak()
+save_the_cats = ->
+  start_the_server (err, start_msg) ->
+    throw err if err
+    #console.log start_msg
 
-		return null
+    cat_names = "fluffy,morris,felix,sylvester,puss_n_boots,sabu".split(",")
+
+    Kitten = mongoose.model('Kitten')
+
+    save_one_cat = (cat_name, callback) ->
+      cat = new Kitten {
+        name: cat_name
+      }
+      cat.save (err, cat) ->
+        if err 
+          console.log("could not save #{cat.name}")
+        else
+          console.log "saved #{cat.name}"
+        callback()
+      return
+
+    async.each cat_names, save_one_cat, (err) ->
+      throw err if err
+      console.log("finished saving cats") 
+      mongoose.disconnect()
+
+  return
+
+find_the_cats =  ->
+  start_the_server (err, start_msg) ->
+    throw err if err
+    #console.log start_msg
+  
+    Kitten = mongoose.model('Kitten')
 
 
-	return null
+    Kitten.find (err, kittens) ->
+      if err
+        console.error "could not find any kittens"
+      else if kittens.length <= 0
+        console.log "I have no kittens"
+      else
+        for k in kittens
+          cat = new Kitten(k)
+          cat.speak()
+
+      mongoose.disconnect()
+      return 
 
 
-exports.delete_the_cats = ->
-	Kitten = mongoose.model('Kitten')
+  return 
 
-	Kitten.remove (err) ->
-		throw err if err
-		console.log "no more kittens"
+
+delete_the_cats = ->
+  start_the_server (err, start_msg) ->
+    throw err if err
+    #console.log start_msg
+
+    Kitten = mongoose.model('Kitten')
+
+    Kitten.remove (err) ->
+      throw err if err
+      console.log "no more kittens"
+      mongoose.disconnect()
+
+
+module.exports = {
+  save_the_cats
+  find_the_cats
+  delete_the_cats
+}

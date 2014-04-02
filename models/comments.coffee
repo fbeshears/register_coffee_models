@@ -2,14 +2,14 @@
 
 exports.register_model = (mongoose) ->
 
-	Comments = new mongoose.Schema {
-			title: String
-			body: String
-			date: Date			
-	}
+  Comments = new mongoose.Schema {
+    title: String
+    body: String
+    date: Date      
+  }
 
-	mongoose.model "Comments", Comments
-	
-	return null
+  mongoose.model "Comments", Comments
+  
+  return null
 
 
